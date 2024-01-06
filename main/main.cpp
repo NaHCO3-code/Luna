@@ -29,6 +29,7 @@ extern "C" void app_main(void)
   storage::init();
   server::wifi_start();
   server::http_start();
+  luna::test();
   return;
 }
 
