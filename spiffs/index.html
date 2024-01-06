@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hello World</title>
+  <style>
+    :root {
+      background-color: #242424;
+      color: #f2f2f2;
+    }
+
+    table {
+      width: auto;
+    }
+
+    td {
+      min-width: 200px;
+      border: 1px solid #888;
+    }
+
+    caption{
+      font-size: 45px;
+      background-color: #333;
+      color: #fff;
+    }
+  </style>
+</head>
+
+<body>
+  <table>
+    <caption>/spiffs</caption>
+    <tbody id="file-list">
+      <tr class="file" id="template">
+        <td class="name"></td>
+        <td class="download"><button>delete</button></td>
+        <td class="delete"><button>download</button></td>
+        <td class="run"><button>run</button></td>
+      </tr>
+    </tbody>
+  </table>
+  <script>
+  function addItem(name){
+    let table = document.getElementById("file-list");
+    let template = document.getElementById("template");
+    template.getElementsByClassName("name")[0].innerText = name;
+    table.appendChild(template.cloneNode(true));
+    template.getElementsByClassName("name")[0].innerText = "";
+  }
+
+  async function getFileList() {
+    let fileName = "";
+    for await (let value of get_chunks("/list")){
+      if(value === void 0){
+        continue;
+      }
+      fileName += String.fromCharCode(...value);
+      if(!fileName.includes("\n")){
+        continue;
+      }
+      addItem(fileName.split("\n")[0]);
+      fileName = fileName.split("\n")[1];
+    }
+    addItem(fileName);
+    document.getElementById("template").remove();
+  }
+
+  /**
+   * @param {string} url
+   * @returns {AsyncIterableIterator<Uint8Array>}
+   */
+  async function* get_chunks(url){
+    let reader = (await fetch(url)).body.getReader();
+    let data = {done: false, value: void 0};
+    while(!data.done){
+      data = await reader.read();
+      yield data.value;
+    }
+  }
+
+  getFileList();
+  </script>
+</body>
+</html>
